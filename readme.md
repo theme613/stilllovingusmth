@@ -1,6 +1,5 @@
 # Heart Beat Visualization
-
-This project is a **single-file HTML 3D animated heart visualization** using [Three.js](https://threejs.org/) and JavaScript.  
+yes
 
 ## Features
 
