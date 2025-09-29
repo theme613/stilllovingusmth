@@ -1,81 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Middle Finger World</title>
-  <style>
-    body {
-      margin: 0;
-      background: #111;
-      overflow: hidden;
-    }
+# Heart Beat Visualization
 
-    .main-middle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 120px;
-      transform: translate(-50%, -50%);
-      animation: pulse 2s infinite ease-in-out;
-      z-index: 10;
-      cursor: pointer;
-    }
+This project is a 3D animated heart visualization using [Three.js](https://threejs.org/) and JavaScript. The heart shape is sampled from a 3D OBJ model, and animated points create a pulsating, heartbeat-like effect.
 
-    @keyframes pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); }
-      50% { transform: translate(-50%, -50%) scale(1.1); }
-    }
+## Features
 
-    .mini-finger {
-      position: absolute;
-      width: 20px;
-      opacity: 0.4;
-      animation: floatUp linear infinite;
-    }
+- 3D interactive visualization (rotate/zoom with mouse)
+- Animated "heartbeat" effect using noise and point cloud
+- No external JS files required—just open the HTML file in your browser
 
-    @keyframes floatUp {
-      0% {
-        transform: translateY(100vh) scale(1) rotate(0deg);
-        opacity: 0;
-      }
-      10% { opacity: 0.5; }
-      100% {
-        transform: translateY(-10vh) scale(1.2) rotate(360deg);
-        opacity: 0;
-      }
-    }
-  </style>
-</head>
-<body>
+## Usage
 
-  <!-- Main Middle Finger SVG (center) -->
-  <svg class="main-middle" viewBox="0 0 512 512" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <path d="M256 0c17.7 0 32 14.3 32 32v208h16c17.7 0 32 14.3 32 32v80h16c17.7 0 32 14.3 32 32v48h16c17.7 0 32 14.3 32 32v16c0 17.7-14.3 32-32 32H112c-17.7 0-32-14.3-32-32v-16c0-17.7 14.3-32 32-32h16v-96c0-17.7 14.3-32 32-32h16V208c0-17.7 14.3-32 32-32h16V32c0-17.7 14.3-32 32-32z"/>
-  </svg>
+1. **Clone or download this repository.**
+2. **Open `index.html` (or your all-in-one HTML file) in your web browser.**
+   - For best results, use Chrome or Firefox.
+   - If you see CORS errors, run a local server (e.g. `python -m http.server`).
 
-  <!-- Floating Background Middle Fingers -->
-  <script>
-    const COUNT = 50;
+## How it Works
 
-    for (let i = 0; i < COUNT; i++) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("viewBox", "0 0 512 512");
-      svg.setAttribute("fill", "white");
-      svg.setAttribute("class", "mini-finger");
+- Loads a 3D heart OBJ model from the web.
+- Samples random points on the heart surface.
+- Animates the points using a noise function and a simulated heartbeat.
+- The heart mesh itself is hidden; only the animated points are visible.
 
-      svg.style.left = Math.random() * 100 + 'vw';
-      svg.style.top = Math.random() * 100 + 'vh';
-      svg.style.width = (Math.random() * 20 + 10) + "px";
-      svg.style.animationDuration = (Math.random() * 10 + 5) + "s";
-      svg.style.animationDelay = Math.random() * 5 + "s";
+## Dependencies
 
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", "M256 0c17.7 0 32 14.3 32 32v208h16c17.7 0 32 14.3 32 32v80h16c17.7 0 32 14.3 32 32v48h16c17.7 0 32 14.3 32 32v16c0 17.7-14.3 32-32 32H112c-17.7 0-32-14.3-32-32v-16c0-17.7 14.3-32 32-32h16v-96c0-17.7 14.3-32 32-32h16V208c0-17.7 14.3-32 32-32h16V32c0-17.7 14.3-32 32-32z");
+- [Three.js](https://threejs.org/) (loaded via CDN)
+- [OBJLoader](https://threejs.org/docs/#examples/en/loaders/OBJLoader) (loaded via CDN)
+- No build tools or npm required.
 
-      svg.appendChild(path);
-      document.body.appendChild(svg);
-    }
-  </script>
+## Customization
 
-</body>
-</html>
+- To change the number of points, edit the `initSpikes()` function in the HTML.
+- To use a different OBJ model, change the URL in the `OBJLoader` call.
+
+## Credits
+
+- Heart OBJ model: [CodePen Asset](https://assets.codepen.io/127738/heart_2.obj)
+- Visualization inspired by creative coding demos on CodePen.
+
+## License
+
+MIT License
