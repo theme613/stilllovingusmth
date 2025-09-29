@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Heart Beat Smooth 30FPS</title>
+  <title>Heart Beat Smooth Fix</title>
   <style>
     html, body { margin:0; padding:0; overflow:hidden; background:#000; }
     canvas { display:block; }
@@ -13,97 +13,34 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 <script>
-// --- SimplexNoise (fixed real version, 3D only for heartbeat) ---
+// Simple fake noise
 class SimplexNoise {
-  constructor() {
-    this.grad3 = [
-      [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
-      [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
-      [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]
-    ];
-    this.p = [];
-    for (let i=0; i<256; i++) this.p[i] = Math.floor(Math.random()*256);
-    this.perm = [];
-    for (let i=0; i<512; i++) this.perm[i]=this.p[i & 255];
-  }
-  dot(g, x, y, z) { return g[0]*x + g[1]*y + g[2]*z; }
-  noise(xin, yin, zin) {
-    let grad3=this.grad3, perm=this.perm;
-    let F3=1/3, G3=1/6;
-    let n0, n1, n2, n3; 
-    let s=(xin+yin+zin)*F3; 
-    let i=Math.floor(xin+s), j=Math.floor(yin+s), k=Math.floor(zin+s);
-    let t=(i+j+k)*G3; 
-    let X0=i-t, Y0=j-t, Z0=k-t;
-    let x0=xin-X0, y0=yin-Y0, z0=zin-Z0;
-    let i1, j1, k1; 
-    let i2, j2, k2; 
-    if(x0>=y0) {
-      if(y0>=z0){i1=1;j1=0;k1=0;i2=1;j2=1;k2=0;} 
-      else if(x0>=z0){i1=1;j1=0;k1=0;i2=1;j2=0;k2=1;} 
-      else {i1=0;j1=0;k1=1;i2=1;j2=0;k2=1;}
-    } else {
-      if(y0<z0){i1=0;j1=0;k1=1;i2=0;j2=1;k2=1;} 
-      else if(x0<z0){i1=0;j1=1;k1=0;i2=0;j2=1;k2=1;} 
-      else {i1=0;j1=1;k1=0;i2=1;j2=1;k2=0;}
-    }
-    let x1=x0-i1+G3, y1=y0-j1+G3, z1=z0-k1+G3;
-    let x2=x0-i2+2*G3, y2=y0-j2+2*G3, z2=z0-k2+2*G3;
-    let x3=x0-1+3*G3, y3=y0-1+3*G3, z3=z0-1+3*G3;
-    let ii=i & 255, jj=j & 255, kk=k & 255;
-    let gi0=perm[ii+perm[jj+perm[kk]]] % 12;
-    let gi1=perm[ii+i1+perm[jj+j1+perm[kk+k1]]] % 12;
-    let gi2=perm[ii+i2+perm[jj+j2+perm[kk+k2]]] % 12;
-    let gi3=perm[ii+1+perm[jj+1+perm[kk+1]]] % 12;
-    let t0=0.6-x0*x0-y0*y0-z0*z0;
-    if(t0<0) n0=0; else {t0*=t0; n0=t0*t0*this.dot(grad3[gi0],x0,y0,z0);}
-    let t1=0.6-x1*x1-y1*y1-z1*z1;
-    if(t1<0) n1=0; else {t1*=t1; n1=t1*t1*this.dot(grad3[gi1],x1,y1,z1);}
-    let t2=0.6-x2*x2-y2*y2-z2*z2;
-    if(t2<0) n2=0; else {t2*=t2; n2=t2*t2*this.dot(grad3[gi2],x2,y2,z2);}
-    let t3=0.6-x3*x3-y3*y3-z3*z3;
-    if(t3<0) n3=0; else {t3*=t3; n3=t3*t3*this.dot(grad3[gi3],x3,y3,z3);}
-    return 32*(n0+n1+n2+n3);
+  noise4D(x,y,z,w) {
+    return Math.sin(x*10 + y*10 + z*10 + w);
   }
 }
 
-// --- MeshSurfaceSampler ---
 class MeshSurfaceSampler {
   constructor(mesh) {
     this.geometry = mesh.geometry;
     this.position = this.geometry.attributes.position;
     this.faceCount = this.position.count / 3;
   }
-  build() { return this; }
-  sample(target) {
+  build(){ return this; }
+  sample(target){
     let face = Math.floor(Math.random() * this.faceCount);
-    let a = face * 3, b = a + 1, c = a + 2;
+    let a = face*3, b=a+1, c=a+2;
     let u = Math.random(), v = Math.random();
-    if (u + v > 1) { u = 1 - u; v = 1 - v; }
-    let pa = new THREE.Vector3().fromBufferAttribute(this.position, a);
-    let pb = new THREE.Vector3().fromBufferAttribute(this.position, b);
-    let pc = new THREE.Vector3().fromBufferAttribute(this.position, c);
+    if(u+v>1){u=1-u; v=1-v;}
+    let pa = new THREE.Vector3().fromBufferAttribute(this.position,a);
+    let pb = new THREE.Vector3().fromBufferAttribute(this.position,b);
+    let pc = new THREE.Vector3().fromBufferAttribute(this.position,c);
     target.copy(pa).multiplyScalar(u)
       .add(pb.clone().multiplyScalar(v))
-      .add(pc.clone().multiplyScalar(1 - u - v));
+      .add(pc.clone().multiplyScalar(1-u-v));
   }
 }
 
-// --- Beat animation (GSAP-like) ---
-function animateBeat(obj, prop, values, durations) {
-  let i = 0;
-  function step() {
-    obj[prop] = values[i];
-    let next = (i + 1) % values.length;
-    setTimeout(() => {
-      i = next;
-      step();
-    }, durations[i]*1000);
-  }
-  step();
-}
-
-// --- Main ---
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer({antialias:true});
@@ -111,6 +48,7 @@ renderer.setClearColor(0x000000);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 camera.position.z = 1.8;
+
 let controls = new THREE.TrackballControls(camera, renderer.domElement);
 controls.noPan = true;
 controls.maxDistance = 3;
@@ -119,13 +57,8 @@ controls.minDistance = 0.7;
 let group = new THREE.Group();
 scene.add(group);
 
-let heart, sampler, spikes = [];
-const spikeCount = 4000; // lower for performance
-let positions = new Float32Array(spikeCount * 3 * 2);
-let colors = new Float32Array(spikeCount * 3 * 2);
+let heart, sampler, spikes=[], positions=[], colors=[];
 let geometry = new THREE.BufferGeometry();
-geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 let material = new THREE.PointsMaterial({vertexColors:true, size:0.009});
 let particles = new THREE.Points(geometry, material);
 group.add(particles);
@@ -137,109 +70,81 @@ const palette = [
   new THREE.Color("#ff77ae"),
   new THREE.Color("#ff1775"),
 ];
-const beat = { a: 0 };
 
 class SparkPoint {
-  constructor() {
+  constructor(){
     let pos = new THREE.Vector3();
     sampler.sample(pos);
-    this.color = palette[Math.floor(Math.random() * palette.length)];
-    this.rand = Math.random() * 0.03;
+    this.color = palette[Math.floor(Math.random()*palette.length)];
+    this.rand = Math.random()*0.03;
     this.pos = pos.clone();
-    this.one = new THREE.Vector3();
-    this.two = new THREE.Vector3();
+    this.one=null; this.two=null;
   }
-  update() {
-    const noise =
-      simplex.noise(this.pos.x, this.pos.y, this.pos.z) + 1.5;
-    const noise2 =
-      simplex.noise(this.pos.x*2, this.pos.y*2, this.pos.z*2) + 1;
-    this.one.copy(this.pos).multiplyScalar(1.01 + noise * 0.15 * beat.a);
-    this.two.copy(this.pos).multiplyScalar(1 + noise2 * (beat.a + 0.3) - beat.a * 1.2);
+  update(a){
+    const noise = simplex.noise4D(this.pos.x,this.pos.y,this.pos.z,a*0.2)+1.5;
+    const noise2= simplex.noise4D(this.pos.x*500,this.pos.y*500,this.pos.z*500,a*0.3)+1;
+    this.one = this.pos.clone().multiplyScalar(1.01 + noise*0.05);
+    this.two = this.pos.clone().multiplyScalar(1 + noise2*0.1);
   }
 }
 
-function initSpikes() {
-  spikes = [];
-  for (let i = 0; i < spikeCount; i++) {
-    spikes.push(new SparkPoint());
-  }
+function initSpikes(){
+  spikes=[];
+  for(let i=0;i<8000;i++) spikes.push(new SparkPoint());
 }
 
-const maxZ = 0.23;
-const rateZ = 0.5;
+const maxZ=0.23, rateZ=0.5;
+let clock=new THREE.Clock();
 
-// --- FPS limiter (30 FPS) ---
-let lastTime = 0;
-const fps = 30;
-const interval = 1000 / fps;
+function render(){
+  if(!heart) return;
+  let t=clock.getElapsedTime();
 
-function render(time) {
-  if (!heart) return;
-  if (time - lastTime > interval) {
-    lastTime = time;
+  // ❤️ Heartbeat scale (uniform)
+  let s=1+Math.sin(t*4)*0.1; // speed=4, size change=0.1
+  group.scale.set(s,s,s);
 
-    let posArr = geometry.attributes.position.array;
-    let colArr = geometry.attributes.color.array;
-    let pIndex = 0, cIndex = 0;
-
-    for (let g of spikes) {
-      g.update();
-      const rand = g.rand;
-      const color = g.color;
-      if (maxZ * rateZ + rand > g.one.z && g.one.z > -maxZ * rateZ - rand) {
-        posArr[pIndex++] = g.one.x;
-        posArr[pIndex++] = g.one.y;
-        posArr[pIndex++] = g.one.z;
-        colArr[cIndex++] = color.r;
-        colArr[cIndex++] = color.g;
-        colArr[cIndex++] = color.b;
-      }
-      if (maxZ * rateZ + rand * 2 > g.one.z && g.one.z > -maxZ * rateZ - rand * 2) {
-        posArr[pIndex++] = g.two.x;
-        posArr[pIndex++] = g.two.y;
-        posArr[pIndex++] = g.two.z;
-        colArr[cIndex++] = color.r;
-        colArr[cIndex++] = color.g;
-        colArr[cIndex++] = color.b;
-      }
+  positions=[]; colors=[];
+  spikes.forEach(g=>{
+    g.update(t);
+    const rand=g.rand, color=g.color;
+    if(maxZ*rateZ+rand>g.one.z && g.one.z>-maxZ*rateZ-rand){
+      positions.push(g.one.x,g.one.y,g.one.z);
+      colors.push(color.r,color.g,color.b);
     }
+    if(maxZ*rateZ+rand*2>g.one.z && g.one.z>-maxZ*rateZ-rand*2){
+      positions.push(g.two.x,g.two.y,g.two.z);
+      colors.push(color.r,color.g,color.b);
+    }
+  });
 
-    geometry.setDrawRange(0, pIndex / 3);
-    geometry.attributes.position.needsUpdate = true;
-    geometry.attributes.color.needsUpdate = true;
+  geometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array(positions),3));
+  geometry.setAttribute("color",new THREE.BufferAttribute(new Float32Array(colors),3));
 
-    controls.update();
-    renderer.render(scene, camera);
-  }
+  controls.update();
+  renderer.render(scene,camera);
   requestAnimationFrame(render);
 }
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener("resize",()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Load OBJ and start
 new THREE.OBJLoader().load(
   "https://assets.codepen.io/127738/heart_2.obj",
-  obj => {
-    heart = obj.children[0];
-    heart.geometry.rotateX(-Math.PI * 0.5);
-    heart.geometry.scale(0.04, 0.04, 0.04);
-    heart.geometry.translate(0, -0.4, 0);
-    heart.visible = false;
-    sampler = new MeshSurfaceSampler(heart).build();
+  obj=>{
+    heart=obj.children[0];
+    heart.geometry.rotateX(-Math.PI*0.5);
+    heart.geometry.scale(0.04,0.04,0.04);
+    heart.geometry.translate(0,-0.4,0);
+    heart.visible=false;
+    sampler=new MeshSurfaceSampler(heart).build();
     initSpikes();
     render();
-  },
-  undefined,
-  err => { console.error("OBJ load error", err); }
+  }
 );
-
-// Animate beat
-animateBeat(beat, "a", [0.5, 0.0], [0.6, 0.6]);
 </script>
 </body>
 </html>
